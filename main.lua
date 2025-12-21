@@ -2994,7 +2994,7 @@ function Library:CreateWindow(...)
         Position = UDim2.new(0, 6, 0, 4);
         Size = UDim2.new(1, -8, 0, 18);
         TextSize = 14;
-        Text = 'ESP Preview';
+        Text = 'Esp preview';
         TextXAlignment = Enum.TextXAlignment.Left;
         ZIndex = 102;
         Parent = EspPreviewInner;
