@@ -3309,7 +3309,7 @@ function Library:CreateWindow(...)
 
         if not Bool then
             if HpBarFill then
-                HpBarFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                HpBarFill.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
             end
             if HpText then
                 HpText.TextColor3 = Color3.fromRGB(0, 255, 0)
@@ -3434,7 +3434,7 @@ function Library:CreateWindow(...)
         local TabButton = Library:Create('Frame', {
             BackgroundColor3 = Library.BackgroundColor;
             BorderColor3 = Library.OutlineColor;
-            Size = UDim2.new(0, TabButtonWidth + 32, 1, 0);
+            Size = UDim2.new(0, TabButtonWidth + 20, 1, 0);
             ZIndex = 1;
             Parent = TabArea;
         });
