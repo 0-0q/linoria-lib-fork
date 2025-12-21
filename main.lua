@@ -3305,7 +3305,7 @@ function Library:CreateWindow(...)
 
         if not Bool then
             if HpBarFill then
-                HpBarFill.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+                HpBarFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
             end
             if HpText then
                 HpText.TextColor3 = Color3.fromRGB(0, 255, 0)
