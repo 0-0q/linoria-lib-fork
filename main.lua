@@ -3164,11 +3164,11 @@ function Library:CreateWindow(...)
     local HpText = Library:Create('TextLabel', {
         BackgroundTransparency = 1;
         AnchorPoint = Vector2.new(0, 0);
-        Position = UDim2.new(0.13, 0, 0.145, 0);
+        Position = UDim2.new(0.06, 0, 0.145, 0);
         Size = UDim2.new(0, 0, 0, 18);
         Text = '<- Num';
         Font = Library.Font;
-        TextColor3 = Color3.fromRGB(255, 255, 255);
+        TextColor3 = Color3.fromRGB(0, 255, 0);
         TextSize = 14;
         TextXAlignment = Enum.TextXAlignment.Left;
         ZIndex = 111;
@@ -3195,27 +3195,11 @@ function Library:CreateWindow(...)
 
     function Library.EspPreview:SetHpBarVisibility(Bool)
         if HpBarOuter then HpBarOuter.Visible = Bool end
-        if HpText then
-            if Bool then
-                HpText.AnchorPoint = Vector2.new(0, 0)
-                HpText.Position = UDim2.new(0.13, 0, 0.145, 0)
-            else
-                HpText.AnchorPoint = Vector2.new(0, 0)
-                HpText.Position = UDim2.new(0.13, 0, 0.145, 0)
-            end
-        end
     end
 
     function Library.EspPreview:SetHpTextVisibility(Bool)
         if HpText then
             HpText.Visible = Bool
-            if Bool and HpBarOuter and HpBarOuter.Visible then
-                HpText.AnchorPoint = Vector2.new(0, 0)
-                HpText.Position = UDim2.new(0.06, 0, 0.145, 0)
-            elseif Bool then
-                HpText.AnchorPoint = Vector2.new(0, 0)
-                HpText.Position = UDim2.new(0.06, 0, 0.145, 0)
-            end
         end
     end
 
@@ -3234,7 +3218,7 @@ function Library:CreateWindow(...)
     local DistanceLabel = Library:Create('TextLabel', {
         BackgroundTransparency = 1;
         AnchorPoint = Vector2.new(0.5, 0);
-        Position = UDim2.new(0.5, 0, 0.95, 0);
+        Position = UDim2.new(0.5, 0, 0.88, 0);
         Size = UDim2.new(0, 0, 0, 18);
         Text = '67m';
         Font = Library.Font;
@@ -3246,8 +3230,87 @@ function Library:CreateWindow(...)
     });
     Library:Create('UIStroke', { Color = Color3.new(0,0,0); Thickness = 1; Parent = DistanceLabel; })
 
+    local DistanceSuffix = 'm'
+    local HpBarMovementConnection = nil
+    local HpColorLerpEnabled = false
+
     function Library.EspPreview:SetDistanceVisibility(Bool)
         if DistanceLabel then DistanceLabel.Visible = Bool end
+    end
+
+    function Library.EspPreview:SetDistanceColor(Color)
+        if DistanceLabel and Color then
+            DistanceLabel.TextColor3 = Color
+        end
+    end
+
+    function Library.EspPreview:SetDistanceSuffix(Str)
+        if Str then
+            DistanceSuffix = Str
+            DistanceLabel.Text = '67' .. DistanceSuffix
+        end
+    end
+
+    function Library.EspPreview:StartBarMovement()
+        if HpBarMovementConnection then
+            Library.EspPreview:StopBarMovement()
+        end
+
+        local StartTime = tick()
+        HpBarMovementConnection = RunService.RenderStepped:Connect(function()
+            local Elapsed = tick() - StartTime
+            local HpPercent = (math.sin(Elapsed * 2) + 1) / 2
+
+            if HpBarFill then
+                HpBarFill.Size = UDim2.new(1, -2, HpPercent, -2)
+                HpBarFill.Position = UDim2.new(0, 1, 1 - HpPercent, 1)
+
+                if HpColorLerpEnabled then
+                    local Color = Color3.fromRGB(
+                        math.floor(255 * (1 - HpPercent)),
+                        math.floor(255 * HpPercent),
+                        0
+                    )
+                    HpBarFill.BackgroundColor3 = Color
+
+                    if HpText and HpText.Visible then
+                        HpText.TextColor3 = Color
+                    end
+                end
+            end
+        end)
+
+        Library:GiveSignal(HpBarMovementConnection)
+    end
+
+    function Library.EspPreview:StopBarMovement()
+        if HpBarMovementConnection then
+            HpBarMovementConnection:Disconnect()
+            HpBarMovementConnection = nil
+        end
+
+        if HpBarFill then
+            HpBarFill.Size = UDim2.new(1, -2, 1, -2)
+            HpBarFill.Position = UDim2.new(0, 1, 0, 1)
+            HpBarFill.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+        end
+
+        if HpText then
+            HpText.TextColor3 = Color3.fromRGB(0, 255, 0)
+        end
+    end
+
+    function Library.EspPreview:HpColorLerp(Bool)
+        HpColorLerpEnabled = Bool
+
+        if not Bool then
+            if HpBarFill then
+                HpBarFill.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+            end
+            if HpText then
+                HpText.TextColor3 = Color3.fromRGB(0, 255, 0)
+            end
+        end
     end
 
 
