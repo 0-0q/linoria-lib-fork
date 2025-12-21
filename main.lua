@@ -442,6 +442,7 @@ do
             Parent = ToggleLabel;
         });
 
+        -- Transparency image taken from https://github.com/matas3535/SplixPrivateDrawingLibrary/blob/main/Library.lua cus i'm lazy
         local CheckerFrame = Library:Create('ImageLabel', {
             BorderSizePixel = 0;
             Size = UDim2.new(0, 27, 0, 13);
@@ -1766,15 +1767,20 @@ do
             local reveal = Container.AbsoluteSize.X
 
             if not Box:IsFocused() or Box.TextBounds.X <= reveal - 2 * PADDING then
+                -- we aren't focused, or we fit so be normal
                 Box.Position = UDim2.new(0, PADDING, 0, 0)
             else
+                -- we are focused and don't fit, so adjust position
                 local cursor = Box.CursorPosition
                 if cursor ~= -1 then
+                    -- calculate pixel width of text from start to cursor
                     local subtext = string.sub(Box.Text, 1, cursor-1)
                     local width = TextService:GetTextSize(subtext, Box.TextSize, Box.Font, Vector2.new(math.huge, math.huge)).X
 
+                    -- check if we're inside the box with the cursor
                     local currentCursorPos = Box.Position.X.Offset + width
 
+                    -- adjust if necessary
                     if currentCursorPos < PADDING then
                         Box.Position = UDim2.fromOffset(PADDING-width, 0)
                     elseif currentCursorPos > reveal - PADDING - 1 then
@@ -2994,7 +3000,7 @@ function Library:CreateWindow(...)
         Position = UDim2.new(0, 6, 0, 4);
         Size = UDim2.new(1, -8, 0, 18);
         TextSize = 14;
-        Text = 'Esp preview';
+        Text = 'ESP Preview';
         TextXAlignment = Enum.TextXAlignment.Left;
         ZIndex = 102;
         Parent = EspPreviewInner;
@@ -3164,11 +3170,11 @@ function Library:CreateWindow(...)
     local HpText = Library:Create('TextLabel', {
         BackgroundTransparency = 1;
         AnchorPoint = Vector2.new(0, 0);
-        Position = UDim2.new(0.06, 0, 0.145, 0);
+        Position = UDim2.new(0.13, 0, 0.145, 0);
         Size = UDim2.new(0, 0, 0, 18);
         Text = '<- Num';
         Font = Library.Font;
-        TextColor3 = Color3.fromRGB(0, 255, 0);
+        TextColor3 = Color3.fromRGB(255, 255, 255);
         TextSize = 14;
         TextXAlignment = Enum.TextXAlignment.Left;
         ZIndex = 111;
@@ -3195,11 +3201,27 @@ function Library:CreateWindow(...)
 
     function Library.EspPreview:SetHpBarVisibility(Bool)
         if HpBarOuter then HpBarOuter.Visible = Bool end
+        if HpText then
+            if Bool then
+                HpText.AnchorPoint = Vector2.new(0, 0)
+                HpText.Position = UDim2.new(0.13, 0, 0.145, 0)
+            else
+                HpText.AnchorPoint = Vector2.new(0, 0)
+                HpText.Position = UDim2.new(0.13, 0, 0.145, 0)
+            end
+        end
     end
 
     function Library.EspPreview:SetHpTextVisibility(Bool)
         if HpText then
             HpText.Visible = Bool
+            if Bool and HpBarOuter and HpBarOuter.Visible then
+                HpText.AnchorPoint = Vector2.new(0, 0)
+                HpText.Position = UDim2.new(0.06, 0, 0.145, 0)
+            elseif Bool then
+                HpText.AnchorPoint = Vector2.new(0, 0)
+                HpText.Position = UDim2.new(0.06, 0, 0.145, 0)
+            end
         end
     end
 
@@ -3218,7 +3240,7 @@ function Library:CreateWindow(...)
     local DistanceLabel = Library:Create('TextLabel', {
         BackgroundTransparency = 1;
         AnchorPoint = Vector2.new(0.5, 0);
-        Position = UDim2.new(0.5, 0, 0.945, 0);
+        Position = UDim2.new(0.5, 0, 0.95, 0);
         Size = UDim2.new(0, 0, 0, 18);
         Text = '67m';
         Font = Library.Font;
@@ -3230,91 +3252,8 @@ function Library:CreateWindow(...)
     });
     Library:Create('UIStroke', { Color = Color3.new(0,0,0); Thickness = 1; Parent = DistanceLabel; })
 
-    local DistanceSuffix = 'm'
-    local HpBarMovementConnection = nil
-    local HpColorLerpEnabled = false
-
     function Library.EspPreview:SetDistanceVisibility(Bool)
         if DistanceLabel then DistanceLabel.Visible = Bool end
-    end
-
-    function Library.EspPreview:SetDistanceColor(Color)
-        if DistanceLabel and Color then
-            DistanceLabel.TextColor3 = Color
-        end
-    end
-
-    function Library.EspPreview:SetDistanceSuffix(Str)
-        if Str then
-            DistanceSuffix = Str
-            DistanceLabel.Text = '67' .. DistanceSuffix
-        end
-    end
-
-    function Library.EspPreview:StartBarMovement()
-        if HpBarMovementConnection then
-            Library.EspPreview:StopBarMovement()
-        end
-
-        local StartTime = tick()
-        HpBarMovementConnection = RunService.RenderStepped:Connect(function()
-            if not Outer.Visible then
-                return
-            end
-
-            local Elapsed = tick() - StartTime
-            local HpPercent = (math.sin(Elapsed * 2) + 1) / 2
-
-            if HpBarFill then
-                HpBarFill.Size = UDim2.new(1, -2, HpPercent, -2)
-                HpBarFill.Position = UDim2.new(0, 1, 1 - HpPercent, 1)
-
-                if HpColorLerpEnabled then
-                    local Color = Color3.fromRGB(
-                        math.floor(255 * (1 - HpPercent)),
-                        math.floor(255 * HpPercent),
-                        0
-                    )
-                    HpBarFill.BackgroundColor3 = Color
-
-                    if HpText and HpText.Visible then
-                        HpText.TextColor3 = Color
-                    end
-                end
-            end
-        end)
-
-        Library:GiveSignal(HpBarMovementConnection)
-    end
-
-    function Library.EspPreview:StopBarMovement()
-        if HpBarMovementConnection then
-            HpBarMovementConnection:Disconnect()
-            HpBarMovementConnection = nil
-        end
-
-        if HpBarFill then
-            HpBarFill.Size = UDim2.new(1, -2, 1, -2)
-            HpBarFill.Position = UDim2.new(0, 1, 0, 1)
-            HpBarFill.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-        end
-
-        if HpText then
-            HpText.TextColor3 = Color3.fromRGB(0, 255, 0)
-        end
-    end
-
-    function Library.EspPreview:HpColorLerp(Bool)
-        HpColorLerpEnabled = Bool
-
-        if not Bool then
-            if HpBarFill then
-                HpBarFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-            end
-            if HpText then
-                HpText.TextColor3 = Color3.fromRGB(0, 255, 0)
-            end
-        end
     end
 
 
@@ -3327,6 +3266,7 @@ function Library:CreateWindow(...)
     Library:GiveSignal(Outer:GetPropertyChangedSignal('AbsoluteSize'):Connect(RepositionEsp))
     task.spawn(RepositionEsp)
 
+    --
 
     local Inner = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor;
@@ -3609,8 +3549,6 @@ function Library:CreateWindow(...)
 
             local Container;
             local CurveCanvas;
-
-            -- curve editor
             
             if Info.CurveBox then
                 Container = Library:Create('Frame', {
@@ -4099,6 +4037,45 @@ function Library:CreateWindow(...)
         if Toggled then
             -- A bit scuffed, but if we're going from not toggled -> toggled we want to show the frame immediately so that the fade is visible.
             Outer.Visible = true;
+
+            task.spawn(function()
+                -- TODO: add cursor fade?
+                local State = InputService.MouseIconEnabled;
+
+                local Cursor = Drawing.new('Triangle');
+                Cursor.Thickness = 1;
+                Cursor.Filled = true;
+                Cursor.Visible = true;
+
+                local CursorOutline = Drawing.new('Triangle');
+                CursorOutline.Thickness = 1;
+                CursorOutline.Filled = false;
+                CursorOutline.Color = Color3.new(0, 0, 0);
+                CursorOutline.Visible = true;
+
+                while Toggled and ScreenGui.Parent do
+                    InputService.MouseIconEnabled = false;
+
+                    local mPos = InputService:GetMouseLocation();
+
+                    Cursor.Color = Library.AccentColor;
+
+                    Cursor.PointA = Vector2.new(mPos.X, mPos.Y);
+                    Cursor.PointB = Vector2.new(mPos.X + 16, mPos.Y + 6);
+                    Cursor.PointC = Vector2.new(mPos.X + 6, mPos.Y + 16);
+
+                    CursorOutline.PointA = Cursor.PointA;
+                    CursorOutline.PointB = Cursor.PointB;
+                    CursorOutline.PointC = Cursor.PointC;
+
+                    RenderStepped:Wait();
+                end;
+
+                InputService.MouseIconEnabled = State;
+
+                Cursor:Remove();
+                CursorOutline:Remove();
+            end);
         end;
 
         for _, Desc in next, Outer:GetDescendants() do
@@ -4187,6 +4164,388 @@ end;
 
 Players.PlayerAdded:Connect(OnPlayerChange);
 Players.PlayerRemoving:Connect(OnPlayerChange);
+
+
+local Window = Library:CreateWindow({
+    -- Set Center to true if you want the menu to appear in the center
+    -- Set AutoShow to true if you want the menu to appear when it is created
+    -- Position and Size are also valid options here
+    -- but you do not need to define them unless you are changing them :)
+
+    Title = 'crankcheat v2',
+    Center = true,
+    AutoShow = true,
+    TabPadding = 8,
+    MenuFadeTime = 0.2
+})
+
+-- CALLBACK NOTE:
+-- Passing in callback functions via the initial element parameters (i.e. Callback = function(Value)...) works
+-- HOWEVER, using Toggles/Options.INDEX:OnChanged(function(Value) ... ) is the RECOMMENDED way to do this.
+-- I strongly recommend decoupling UI code from logic code. i.e. Create your UI elements FIRST, and THEN setup :OnChanged functions later.
+
+-- You do not have to set your tabs & groups up this way, just a prefrence.
+local Tabs = {
+    -- Creates a new tab titled Main
+    Main = Window:AddTab({
+        Name = 'Main',
+        EspPreview = true
+    }),
+    ['UI Settings'] = Window:AddTab('UI Settings'),
+}
+
+-- Groupbox and Tabbox inherit the same functions
+-- except Tabboxes you have to call the functions on a tab (Tabbox:AddTab(name))
+local LeftGroupBox = Tabs.Main:AddLeftGroupbox('Groupbox')
+
+local CurveBox = Tabs.Main:AddRightGroupbox({ Name = 'Curve Editor', CurveBox = true })
+
+-- We can also get our Main tab via the following code:
+-- local LeftGroupBox = Window.Tabs.Main:AddLeftGroupbox('Groupbox')
+
+-- Tabboxes are a tiny bit different, but here's a basic example:
+--[[
+
+local TabBox = Tabs.Main:AddLeftTabbox() -- Add Tabbox on left side
+
+local Tab1 = TabBox:AddTab('Tab 1')
+local Tab2 = TabBox:AddTab('Tab 2')
+
+-- You can now call AddToggle, etc on the tabs you added to the Tabbox
+]]
+
+-- Groupbox:AddToggle
+-- Arguments: Index, Options
+LeftGroupBox:AddToggle('MyToggle', {
+    Text = 'This is a toggle',
+    Default = true, -- Default value (true / false)
+    Tooltip = 'This is a tooltip', -- Information shown when you hover over the toggle
+
+    Callback = function(Value)
+        print('[cb] MyToggle changed to:', Value)
+    end
+})
+
+
+-- Fetching a toggle object for later use:
+-- Toggles.MyToggle.Value
+
+-- Toggles is a table added to getgenv() by the library
+-- You index Toggles with the specified index, in this case it is 'MyToggle'
+-- To get the state of the toggle you do toggle.Value
+
+-- Calls the passed function when the toggle is updated
+Toggles.MyToggle:OnChanged(function()
+    -- here we get our toggle object & then get its value
+    print('MyToggle changed to:', Toggles.MyToggle.Value)
+end)
+
+-- This should print to the console: "My toggle state changed! New value: false"
+Toggles.MyToggle:SetValue(false)
+
+-- 1/15/23
+-- Deprecated old way of creating buttons in favor of using a table
+-- Added DoubleClick button functionality
+
+--[[
+    Groupbox:AddButton
+    Arguments: {
+        Text = string,
+        Func = function,
+        DoubleClick = boolean
+        Tooltip = string,
+    }
+
+    You can call :AddButton on a button to add a SubButton!
+]]
+
+local MyButton = LeftGroupBox:AddButton({
+    Text = 'Button',
+    Func = function()
+        print('You clicked a button!')
+    end,
+    DoubleClick = false,
+    Tooltip = 'This is the main button'
+})
+
+local MyButton2 = MyButton:AddButton({
+    Text = 'Sub button',
+    Func = function()
+        print('You clicked a sub button!')
+    end,
+    DoubleClick = true, -- You will have to click this button twice to trigger the callback
+    Tooltip = 'This is the sub button (double click me!)'
+})
+
+--[[
+    NOTE: You can chain the button methods!
+    EXAMPLE:
+
+    LeftGroupBox:AddButton({ Text = 'Kill all', Func = Functions.KillAll, Tooltip = 'This will kill everyone in the game!' })
+        :AddButton({ Text = 'Kick all', Func = Functions.KickAll, Tooltip = 'This will kick everyone in the game!' })
+]]
+
+-- Groupbox:AddLabel
+-- Arguments: Text, DoesWrap
+LeftGroupBox:AddLabel('This is a label')
+LeftGroupBox:AddLabel('This is a label\n\nwhich wraps its text!', true)
+
+-- Groupbox:AddDivider
+-- Arguments: None
+LeftGroupBox:AddDivider()
+
+--[[
+    Groupbox:AddSlider
+    Arguments: Idx, SliderOptions
+
+    SliderOptions: {
+        Text = string,
+        Default = number,
+        Min = number,
+        Max = number,
+        Suffix = string,
+        Rounding = number,
+        Compact = boolean,
+        HideMax = boolean,
+    }
+
+    Text, Default, Min, Max, Rounding must be specified.
+    Suffix is optional.
+    Rounding is the number of decimal places for precision.
+
+    Compact will hide the title label of the Slider
+
+    HideMax will only display the value instead of the value & max value of the slider
+    Compact will do the same thing
+]]
+LeftGroupBox:AddSlider('MySlider', {
+    Text = 'This is my slider!',
+    Default = 0,
+    Min = 0,
+    Max = 5,
+    Rounding = 1,
+    Compact = false,
+
+    Callback = function(Value)
+        print('[cb] MySlider was changed! New value:', Value)
+    end
+})
+
+-- Options is a table added to getgenv() by the library
+-- You index Options with the specified index, in this case it is 'MySlider'
+-- To get the value of the slider you do slider.Value
+
+local Number = Options.MySlider.Value
+Options.MySlider:OnChanged(function()
+    print('MySlider was changed! New value:', Options.MySlider.Value)
+end)
+
+-- This should print to the console: "MySlider was changed! New value: 3"
+Options.MySlider:SetValue(3)
+
+-- Groupbox:AddInput
+-- Arguments: Idx, Info
+LeftGroupBox:AddInput('MyTextbox', {
+    Default = 'My textbox!',
+    Numeric = false, -- true / false, only allows numbers
+    Finished = false, -- true / false, only calls callback when you press enter
+
+    Text = 'This is a textbox',
+    Tooltip = 'This is a tooltip', -- Information shown when you hover over the textbox
+
+    Placeholder = 'Placeholder text', -- placeholder text when the box is empty
+    -- MaxLength is also an option which is the max length of the text
+
+    Callback = function(Value)
+        print('[cb] Text updated. New text:', Value)
+    end
+})
+
+Options.MyTextbox:OnChanged(function()
+    print('Text updated. New text:', Options.MyTextbox.Value)
+end)
+
+-- Groupbox:AddDropdown
+-- Arguments: Idx, Info
+
+LeftGroupBox:AddDropdown('MyDropdown', {
+    Values = { 'This', 'is', 'a', 'dropdown' },
+    Default = 1, -- number index of the value / string
+    Multi = false, -- true / false, allows multiple choices to be selected
+
+    Text = 'A dropdown',
+    Tooltip = 'This is a tooltip', -- Information shown when you hover over the dropdown
+
+    Callback = function(Value)
+        print('[cb] Dropdown got changed. New value:', Value)
+    end
+})
+
+Options.MyDropdown:OnChanged(function()
+    print('Dropdown got changed. New value:', Options.MyDropdown.Value)
+end)
+
+Options.MyDropdown:SetValue('This')
+
+-- Multi dropdowns
+LeftGroupBox:AddDropdown('MyMultiDropdown', {
+    -- Default is the numeric index (e.g. "This" would be 1 since it if first in the values list)
+    -- Default also accepts a string as well
+
+    -- Currently you can not set multiple values with a dropdown
+
+    Values = { 'This', 'is', 'a', 'dropdown' },
+    Default = 1,
+    Multi = true, -- true / false, allows multiple choices to be selected
+
+    Text = 'A dropdown',
+    Tooltip = 'This is a tooltip', -- Information shown when you hover over the dropdown
+
+    Callback = function(Value)
+        print('[cb] Multi dropdown got changed:', Value)
+    end
+})
+
+Options.MyMultiDropdown:OnChanged(function()
+    -- print('Dropdown got changed. New value:', )
+    print('Multi dropdown got changed:')
+    for key, value in next, Options.MyMultiDropdown.Value do
+        print(key, value) -- should print something like This, true
+    end
+end)
+
+Options.MyMultiDropdown:SetValue({
+    This = true,
+    is = true,
+})
+
+LeftGroupBox:AddDropdown('MyPlayerDropdown', {
+    SpecialType = 'Player',
+    Text = 'A player dropdown',
+    Tooltip = 'This is a tooltip', -- Information shown when you hover over the dropdown
+
+    Callback = function(Value)
+        print('[cb] Player dropdown got changed:', Value)
+    end
+})
+
+-- Label:AddColorPicker
+-- Arguments: Idx, Info
+
+-- You can also ColorPicker & KeyPicker to a Toggle as well
+
+LeftGroupBox:AddLabel('Color'):AddColorPicker('ColorPicker', {
+    Default = Color3.new(0, 1, 0), -- Bright green
+    Title = 'Some color', -- Optional. Allows you to have a custom color picker title (when you open it)
+    Transparency = 0, -- Optional. Enables transparency changing for this color picker (leave as nil to disable)
+
+    Callback = function(Value)
+        print('[cb] Color changed!', Value)
+    end
+})
+
+Options.ColorPicker:OnChanged(function()
+    print('Color changed!', Options.ColorPicker.Value)
+    print('Transparency changed!', Options.ColorPicker.Transparency)
+end)
+
+Options.ColorPicker:SetValueRGB(Color3.fromRGB(0, 255, 140))
+
+-- Label:AddKeyPicker
+-- Arguments: Idx, Info
+
+LeftGroupBox:AddLabel('Keybind'):AddKeyPicker('KeyPicker', {
+    -- SyncToggleState only works with toggles.
+    -- It allows you to make a keybind which has its state synced with its parent toggle
+
+    -- Example: Keybind which you use to toggle flyhack, etc.
+    -- Changing the toggle disables the keybind state and toggling the keybind switches the toggle state
+
+    Default = 'MB2', -- String as the name of the keybind (MB1, MB2 for mouse buttons)
+    SyncToggleState = false,
+
+
+    -- You can define custom Modes but I have never had a use for it.
+    Mode = 'Toggle', -- Modes: Always, Toggle, Hold
+
+    Text = 'Auto lockpick safes', -- Text to display in the keybind menu
+    NoUI = false, -- Set to true if you want to hide from the Keybind menu,
+
+    -- Occurs when the keybind is clicked, Value is `true`/`false`
+    Callback = function(Value)
+        print('[cb] Keybind clicked!', Value)
+    end,
+
+    -- Occurs when the keybind itself is changed, `New` is a KeyCode Enum OR a UserInputType Enum
+    ChangedCallback = function(New)
+        print('[cb] Keybind changed!', New)
+    end
+})
+
+-- OnClick is only fired when you press the keybind and the mode is Toggle
+-- Otherwise, you will have to use Keybind:GetState()
+Options.KeyPicker:OnClick(function()
+    print('Keybind clicked!', Options.KeyPicker:GetState())
+end)
+
+Options.KeyPicker:OnChanged(function()
+    print('Keybind changed!', Options.KeyPicker.Value)
+end)
+
+task.spawn(function()
+    while true do
+        wait(1)
+
+        -- example for checking if a keybind is being pressed
+        local state = Options.KeyPicker:GetState()
+        if state then
+            print('KeyPicker is being held down')
+        end
+
+        if Library.Unloaded then break end
+    end
+end)
+
+Options.KeyPicker:SetValue({ 'MB2', 'Toggle' }) -- Sets keybind to MB2, mode to Hold
+
+-- Long text label to demonstrate UI scrolling behaviour.
+local LeftGroupBox2 = Tabs.Main:AddLeftGroupbox('Groupbox #2');
+LeftGroupBox2:AddLabel('Oh no...\nThis label spans multiple lines!\n\nWe\'re gonna run out of UI space...\nJust kidding! Scroll down!\n\n\nHello from below!', true)
+
+local TabBox = Tabs.Main:AddRightTabbox() -- Add Tabbox on right side
+
+-- Anything we can do in a Groupbox, we can do in a Tabbox tab (AddToggle, AddSlider, AddLabel, etc etc...)
+local Tab1 = TabBox:AddTab('Tab 1')
+Tab1:AddToggle('Tab1Toggle', { Text = 'Tab1 Toggle' });
+
+local Tab2 = TabBox:AddTab('Tab 2')
+Tab2:AddToggle('Tab2Toggle', { Text = 'Tab2 Toggle' });
+
+-- Dependency boxes let us control the visibility of UI elements depending on another UI elements state.
+-- e.g. we have a 'Feature Enabled' toggle, and we only want to show that features sliders, dropdowns etc when it's enabled!
+-- Dependency box example:
+local RightGroupbox = Tabs.Main:AddRightGroupbox('Groupbox #3');
+RightGroupbox:AddToggle('ControlToggle', { Text = 'Dependency box toggle' });
+
+local Depbox = RightGroupbox:AddDependencyBox();
+Depbox:AddToggle('DepboxToggle', { Text = 'Sub-dependency box toggle' });
+
+-- We can also nest dependency boxes!
+-- When we do this, our SupDepbox automatically relies on the visiblity of the Depbox - on top of whatever additional dependencies we set
+local SubDepbox = Depbox:AddDependencyBox();
+SubDepbox:AddSlider('DepboxSlider', { Text = 'Slider', Default = 50, Min = 0, Max = 100, Rounding = 0 });
+SubDepbox:AddDropdown('DepboxDropdown', { Text = 'Dropdown', Default = 1, Values = {'a', 'b', 'c'} });
+
+Depbox:SetupDependencies({
+    { Toggles.ControlToggle, true } -- We can also pass `false` if we only want our features to show when the toggle is off!
+});
+
+SubDepbox:SetupDependencies({
+    { Toggles.DepboxToggle, true }
+});
+
+Library:SetWatermarkVisibility(true)
+
 
 getgenv().Library = Library
 return Library
