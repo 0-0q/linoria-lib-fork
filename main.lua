@@ -3218,7 +3218,7 @@ function Library:CreateWindow(...)
     local DistanceLabel = Library:Create('TextLabel', {
         BackgroundTransparency = 1;
         AnchorPoint = Vector2.new(0.5, 0);
-        Position = UDim2.new(0.5, 0, 0.88, 0);
+        Position = UDim2.new(0.5, 0, 0.945, 0);
         Size = UDim2.new(0, 0, 0, 18);
         Text = '67m';
         Font = Library.Font;
@@ -3258,6 +3258,10 @@ function Library:CreateWindow(...)
 
         local StartTime = tick()
         HpBarMovementConnection = RunService.RenderStepped:Connect(function()
+            if not Outer.Visible then
+                return
+            end
+
             local Elapsed = tick() - StartTime
             local HpPercent = (math.sin(Elapsed * 2) + 1) / 2
 
