@@ -15,7 +15,6 @@ local ScreenGui = Instance.new('ScreenGui');
 ProtectGui(ScreenGui);
 
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global;
-ScreenGui.Parent = CoreGui;
 
 local Toggles = {};
 local Options = {};
@@ -2947,6 +2946,13 @@ function Library:CreateWindow(...)
     if Config.Center then
         Config.AnchorPoint = Vector2.new(0.5, 0.5)
         Config.Position = UDim2.fromScale(0.5, 0.5)
+    end
+
+    if Config.OverrideParent then
+        ScreenGui.Parent = Config.OverrideParent;
+        print("Overrided parent! ", Config.OverrideParent.Name)
+    else
+        ScreenGui.Parent = CoreGui;
     end
 
     local Window = {
