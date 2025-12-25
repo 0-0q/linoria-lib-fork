@@ -13,6 +13,7 @@ local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
 local ScreenGui = Instance.new('ScreenGui');
 ProtectGui(ScreenGui);
+ScreenGui.Parent = CoreGui;
 
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global;
 
@@ -2947,17 +2948,6 @@ function Library:CreateWindow(...)
         Config.AnchorPoint = Vector2.new(0.5, 0.5)
         Config.Position = UDim2.fromScale(0.5, 0.5)
     end
-
-    --if Config.OverrideParent then
-    --    ScreenGui.Parent = Config.OverrideParent;
-    --    print("Overrided parent! ", Config.OverrideParent.Name)
-    --else
-    print("override started")
-    task.wait(6)
-        ScreenGui.Name = "RobloxGui"
-        ScreenGui.Parent = CoreGui;
-    print("?")
-    --end
 
     local Window = {
         Tabs = {};
