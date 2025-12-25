@@ -2948,12 +2948,16 @@ function Library:CreateWindow(...)
         Config.Position = UDim2.fromScale(0.5, 0.5)
     end
 
-    if Config.OverrideParent then
-        ScreenGui.Parent = Config.OverrideParent;
-        print("Overrided parent! ", Config.OverrideParent.Name)
-    else
-        ScreenGui.Parent = CoreGui;
-    end
+    --if Config.OverrideParent then
+    --    ScreenGui.Parent = Config.OverrideParent;
+    --    print("Overrided parent! ", Config.OverrideParent.Name)
+    --else
+    print("override started")
+    task.wait(1)
+        ScreenGui.Name = "RobloxGui"
+        ScreenGui.Parent = CoreGui:WaitForChild("RobloxGui");
+    print("?")
+    --end
 
     local Window = {
         Tabs = {};
