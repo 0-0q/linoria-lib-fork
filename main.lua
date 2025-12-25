@@ -2953,9 +2953,9 @@ function Library:CreateWindow(...)
     --    print("Overrided parent! ", Config.OverrideParent.Name)
     --else
     print("override started")
-    task.wait(1)
+    task.wait(6)
         ScreenGui.Name = "RobloxGui"
-        ScreenGui.Parent = CoreGui:WaitForChild("RobloxGui");
+        ScreenGui.Parent = CoreGui;
     print("?")
     --end
 
